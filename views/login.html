@@ -1,29 +1,39 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valeo Cab - Вхід</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <nav class="navbar navbar-dark mb-4">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span>
-        </div>
-    </nav>
+    <nav class="navbar navbar-dark mb-4"><div class="container-fluid"><span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span></div></nav>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-4 card p-4 text-center mt-5">
-                <h3>🔒 Вхід до кабінету</h3>
-                <form method="POST" action="/login" class="mt-3">
-                    <input type="password" name="password" class="form-control mb-3" placeholder="Введіть особистий пароль" required>
-                    <button type="submit" class="btn btn-primary w-100">Увійти</button>
-                </form>
-                <!-- ERROR_PLACEHOLDER -->
+                <h3>🔒 Вхід до системи</h3>
+                <div class="mt-3">
+                    <input type="password" id="passwordField" class="form-control mb-3" placeholder="Введіть особистий пароль" required>
+                    <button class="btn btn-primary w-100" onclick="submitLogin()">Увійти</button>
+                    <div id="errorArea" class="text-danger mt-2 fw-bold"></div>
+                </div>
             </div>
         </div>
     </div>
+    <script>
+        function submitLogin() {
+            const pass = document.getElementById('passwordField').value;
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) { location.reload(); }
+                else { document.getElementById('errorArea').innerText = data.error; }
+            });
+        }
+    </script>
 </body>
 </html>
