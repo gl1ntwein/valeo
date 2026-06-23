@@ -13,34 +13,29 @@ st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 # --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
 st.markdown("""
     <style>
-        /* 1. Сховуємо верхню панель розробника (Fork, GitHub) */
-        header {visibility: hidden; height: 0px !important;}
-        
-        /* 2. Сховуємо нижній стандартний футер */
-        footer {visibility: hidden; height: 0px !important;}
-        
-        /* 3. Жорстко видаляємо червону плашку хостингу (Hosted with Streamlit) */
-        div[class^="stDeployButton"], 
-        div[data-testid="stStatusWidget"],
-        .stAppDeployButton,
-        #MainMenu {
+        /* Глобальне приховування всіх елементів брендингу */
+        header, footer, .stAppDeployButton, [data-testid="stStatusWidget"], #MainMenu {
             display: none !important;
             visibility: hidden !important;
+            height: 0px !important;
         }
         
-        /* 4. Очищення нижнього правого кутка від плаваючих кнопок сервісу */
-        [data-testid="stToolbar"],
-        div[class*="viewerBadge"] {
+        /* Видалення плаваючого мобільного бейджа сервісу */
+        div[class*="viewerBadge"], 
+        div[class*="DeployButton"],
+        div[class^="stDeployButton"] {
             display: none !important;
+            opacity: 0 !important;
         }
         
-        /* 5. На мобільних прибираємо відступи, щоб звільнити місце на екрані */
+        /* Корекція відступів головного екрана */
         .main .block-container {
             padding-top: 1rem !important;
             padding-bottom: 0rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # 2. БЛОК ЗАХИСТУ ПАРОЛЕМ
 def check_password():
