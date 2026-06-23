@@ -1,63 +1,71 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valeo Cab - Вхід</title>
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valeo Cab - Вхід</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <nav class="navbar navbar-dark mb-4">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span>
-        </div>
-    </nav>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-4 card p-4 text-center mt-5">
-                <h3>🔒 Вхід до системи</h3>
-                <div class="mt-3">
-                    <input type="password" id="passwordField" class="form-control mb-3" placeholder="Введіть особистий пароль" required>
-                    <!-- МИ ПРИБРАЛИ ONCLICK ЗВІДСИ, ЩОБ УНИКНУТИ ПОМИЛОК -->
-                    <button id="loginButton" class="btn btn-primary w-100">Увійти</button>
-                    <div id="errorArea" class="text-danger mt-2 fw-bold"></div>
-                </div>
-            </div>
-        </div>
+  <nav class="navbar mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand">Кабінет Valeo</span>
     </div>
+  </nav>
 
-    <script>
-        // Запускаємо логіку тільки після повного рендерингу сторінки браузером
-        document.addEventListener("DOMContentLoaded", function() {
-            const loginBtn = document.getElementById('loginButton');
-            const passwordField = document.getElementById('passwordField');
-            const errorArea = document.getElementById('errorArea');
+  <main class="container">
+    <div class="row justify-content-center">
+      <section class="col-md-4">
+        <div class="card p-4 text-center mt-5">
+          <h3>Вхід до системи</h3>
+          <div class="mt-3">
+            <input type="password" id="passwordField" class="form-control mb-3" placeholder="Введіть особистий пароль" autocomplete="current-password" required>
+            <button id="loginButton" class="btn btn-primary w-100" type="button">Увійти</button>
+            <div id="errorArea" class="text-danger mt-2 fw-bold" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 
-            if (loginBtn) {
-                loginBtn.addEventListener('click', function() {
-                    const pass = passwordField.value;
-                    errorArea.innerText = "⏳ Перевірка...";
-                    
-                    fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: pass })
-                    })
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        if (data.success) { 
-                            location.reload(); 
-                        } else { 
-                            errorArea.innerText = data.error; 
-                        }
-                    })
-                    .catch(function(err) {
-                        errorArea.innerText = "❌ Помилка зв'язку з сервером.";
-                    });
-                });
-            }
-        });
-    </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const loginButton = document.getElementById('loginButton');
+      const passwordField = document.getElementById('passwordField');
+      const errorArea = document.getElementById('errorArea');
+
+      async function login() {
+        errorArea.textContent = '';
+        loginButton.disabled = true;
+        loginButton.textContent = 'Перевірка...';
+
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: passwordField.value }),
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            location.reload();
+            return;
+          }
+
+          errorArea.textContent = result.error || 'Не вдалося увійти.';
+        } catch (error) {
+          errorArea.textContent = 'Помилка звʼязку із сервером.';
+        } finally {
+          loginButton.disabled = false;
+          loginButton.textContent = 'Увійти';
+        }
+      }
+
+      loginButton.addEventListener('click', login);
+      passwordField.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') login();
+      });
+    });
+  </script>
 </body>
 </html>

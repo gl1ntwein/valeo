@@ -1,12 +1,312 @@
-body { 
-    background-color: #f8f9fa; 
-    font-family: sans-serif; 
+* {
+  box-sizing: border-box;
 }
-.navbar { 
-    background-color: #212529; 
+
+body {
+  margin: 0;
+  background: #f5f6f8;
+  color: #212529;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
 }
-.card { 
-    border-radius: 12px; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-    background-color: #ffffff; 
+
+a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.navbar {
+  background: #212529;
+  color: #ffffff;
+  padding: 14px 0;
+}
+
+.navbar .container,
+.navbar .container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.navbar-brand {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.container,
+.container-fluid {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.container-fluid {
+  width: min(1280px, calc(100% - 32px));
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -12px;
+}
+
+.g-4 {
+  row-gap: 24px;
+}
+
+.col-12,
+.col-md-4,
+.col-md-8 {
+  width: 100%;
+  padding: 0 12px;
+}
+
+@media (min-width: 768px) {
+  .col-md-4 {
+    width: 33.333333%;
+  }
+
+  .col-md-8 {
+    width: 66.666667%;
+  }
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(33, 37, 41, 0.06);
+}
+
+.p-4 {
+  padding: 24px;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.mt-3 {
+  margin-top: 16px;
+}
+
+.mt-5 {
+  margin-top: 48px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mb-3 {
+  margin-bottom: 16px;
+}
+
+.mb-4 {
+  margin-bottom: 24px;
+}
+
+.mb-5 {
+  margin-bottom: 48px;
+}
+
+.py-3 {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 12px;
+  color: #212529;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 22px;
+}
+
+h4 {
+  font-size: 19px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.form-control,
+.form-select {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #212529;
+  font: inherit;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: #ffffff;
+}
+
+.btn-success {
+  background: #198754;
+  border-color: #198754;
+  color: #ffffff;
+}
+
+.btn-outline-primary {
+  background: #ffffff;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.btn-outline-light {
+  background: transparent;
+  border-color: #f8f9fa;
+  color: #f8f9fa;
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.h-100 {
+  height: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-success {
+  color: #198754;
+}
+
+.text-primary {
+  color: #0d6efd;
+}
+
+.fw-bold {
+  font-weight: 700;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  vertical-align: top;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #dee2e6;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table-dark th {
+  background: #212529;
+  color: #ffffff;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+  background: #eef4ff;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #dee2e6;
+  margin: 16px 0;
+}
+
+@media (max-width: 767px) {
+  .navbar .container-fluid,
+  .d-flex {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .card {
+    border-radius: 6px;
+  }
 }
