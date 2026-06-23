@@ -8,7 +8,7 @@ app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secre
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = True
 
-# ГЛОБАЛЬНЕ ПІДКЛЮЧЕННЯ: Ініціалізується ОДИН РАЗ, перевикористовуючи сесії (Швидкість +++)
+# Глобальне підключення, щоб не створювати нові пули з'єднань щоразу
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
@@ -17,10 +17,22 @@ if SUPABASE_URL and SUPABASE_KEY:
     try:
         supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
     except Exception as e:
-        print(f"Помилка глобального підключення до Supabase: {e}")
+        print(f"Помилка Supabase: {e}")
 
-# Імпортуємо твій HTML з сусіднього файлу html_template.py
+# Імпортуємо твій HTML-дизайн
 from .html_template import COMBINED_HTML
+
+# Допоміжна функція для швидкої та чіткої відповіді браузеру
+def quick_response(html_content):
+    response = make_response(html_content)
+    # Перетворюємо текст в байти, щоб дізнатися точну вагу сторінки
+    response_bytes = html_content.encode('utf-8')
+    
+    # Головні хаки проти зависань на Vercel:
+    response.headers["Content-Length"] = str(len(response_bytes)) # МИТТЄВО обриває крутіння в браузері
+    response.headers["Connection"] = "close"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -37,16 +49,13 @@ def index():
     db_data = []
     if session.get('authorized') and supabase_client:
         try:
-            # Використовуємо вже готове з'єднання без повторних авторизацій
             data_res = supabase_client.table("work_logs").select("*").order("data", desc=True).execute()
             db_data = data_res.data if hasattr(data_res, 'data') else data_res
         except Exception as e:
-            print(f"Помилка отримання даних: {e}")
+            print(f"Помилка бази: {e}")
 
     rendered = render_template_string(COMBINED_HTML, authorized=session.get('authorized'), logs=db_data, error=error_msg)
-    response = make_response(rendered)
-    response.headers["Connection"] = "close"
-    return response
+    return quick_response(rendered)
 
 @app.route('/add_report', methods=['POST'])
 def add_report():
@@ -74,7 +83,7 @@ def add_report():
         try:
             supabase_client.table("work_logs").upsert(data_to_insert).execute()
         except Exception as e:
-            print(f"Помилка запису зміни: {e}")
+            print(e)
             
     res = make_response(redirect(url_for('index')))
     res.headers["Connection"] = "close"
@@ -85,9 +94,7 @@ def download_excel():
     if not session.get('authorized'): return redirect(url_for('index'))
     if not supabase_client: return "Помилка бази даних"
     
-    # ЛОКАЛЬНИЙ ІМПОРТ: pandas вантажиться ТІЛЬКИ в момент кліку на кнопку завантаження звіту!
     import pandas as pd
-    
     res = supabase_client.table("work_logs").select("*").order("data", desc=True).execute()
     db_data = res.data if hasattr(res, 'data') else res
     df = pd.DataFrame(db_data)
