@@ -89,8 +89,8 @@
                                     <th>Рапорт деталей</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- TABLE_ROWS_PLACEHOLDER -->
+                            <tbody id="tableBody">
+                                <tr><td colspan="5" class="text-center text-muted py-3">⏳ Фонове завантаження даних із бази...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -98,5 +98,32 @@
             </div>
         </div>
     </div>
+
+    <!-- ФОНОВИЙ СКРИПТ: Запускається ПІСЛЯ повного відкриття сторінки і не блокує екран -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/api/logs')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tableBody');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">База даних порожня. Внесіть першу зміну ліворуч!</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(row => `
+                        <tr>
+                            <td>${row.data}</td>
+                            <td>${row.linia}</td>
+                            <td>${row.zmiana} зміна</td>
+                            <td>${row.godziny_fakt} год (Нічні: ${row.godziny_nocne}, Надгодини: ${row.nadgodziny})</td>
+                            <td><span class="text-success">OK: ${row.komponenty_ok}</span> / <span class="text-danger">NOK: ${row.komponenty_nok}</span></td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(err => {
+                    document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">❌ Помилка завантаження таблиці.</td></tr>';
+                });
+        });
+    </script>
 </body>
 </html>
