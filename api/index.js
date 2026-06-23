@@ -9,8 +9,10 @@ const app = express();
 const publicDir = path.join(__dirname, '..', 'public');
 const viewsDir = path.join(__dirname, '..', 'views');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const fallbackSupabaseUrl = 'https://whjflfcqzeksfaaoormw.supabase.co';
+const fallbackSupabaseKey = 'sb_publishable_Ht1Rc32FbyEWwlAgR29u0A_HxxMRsbh';
+const supabaseUrl = process.env.SUPABASE_URL || fallbackSupabaseUrl;
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || fallbackSupabaseKey;
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 app.disable('x-powered-by');
