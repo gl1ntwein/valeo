@@ -12,7 +12,6 @@
     </style>
 </head>
 <body>
-    <!-- Верхня панель -->
     <nav class="navbar navbar-dark mb-4">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span>
@@ -23,7 +22,7 @@
     </nav>
 
     <div class="container mb-5">
-        <!-- БЛОК 1: ЕКРАН ВХОДУ (Якщо НЕ авторизований) -->
+        <!-- ЕКРАН ВХОДУ (Якщо НЕ авторизований) -->
         {% if not authorized %}
         <div class="row justify-content-center">
             <div class="col-md-4 card p-4 text-center mt-5">
@@ -39,7 +38,7 @@
         </div>
         {% endif %}
 
-        <!-- БЛОК 2: ГОЛОВНА ПАНЕЛЬ (Відкривається тільки після входу) -->
+        <!-- ГОЛОВНА ПАНЕЛЬ (Якщо авторизований) -->
         {% if authorized %}
         <div class="row g-4">
             <!-- Форма внесення рапорту -->
