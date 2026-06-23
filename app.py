@@ -12,45 +12,30 @@ st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
 # --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
 # --- ПРИМУСОВЕ ВИДАЛЕННЯ ПЛАШКИ ТА АВАТАРКИ ЧЕРЕЗ КЛАСИ ІНСПЕКТОРА ---
+st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
+
+# НАДПОТУЖНИЙ ХАК: Сховуємо абсолютно весь нижній контейнер хостингу
 st.markdown("""
     <style>
-        /* 1. Ховаємо верхню чорну панель (Fork, GitHub) */
-        header[data-testid="stHeader"] {
-            display: none !important;
-        }
+        header[data-testid="stHeader"] { display: none !important; }
+        footer { visibility: hidden !important; height: 0px !important; }
         
-        /* 2. Сховуємо стандартний футер */
-        footer {
-            visibility: hidden !important;
-            height: 0px !important;
-        }
-        
-        /* 3. Використовуємо твій клас контейнера та додаємо !important, 
-              щоб правило не було перекресленим */
-        [class*="_container_gzau3_"],
-        [class*="_profileContainer_"],
-        [class*="_profilePreview_"] {
+        /* Глушимо взагалі весь блок, де сидить аватарка та напис */
+        [class*="gzau3"], [class*="viewerBadge"] {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
-            width: 0px !important;
             height: 0px !important;
         }
         
-        /* 4. Захист стрілочки мобільного меню (sidebar), щоб вона завжди працювала */
         button[data-testid="baseButton-headerNoPadding"] {
             display: inline-flex !important;
             visibility: visible !important;
             z-index: 999999 !important;
         }
-        
-        /* 5. Робимо компактні відступи на мобілці */
-        .main .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 1rem !important;
-        }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
