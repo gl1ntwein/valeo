@@ -5,8 +5,13 @@ import pandas as pd
 import io
 
 # Вказуємо Flask шукати шаблони в кореневій папці templates
-app = Flask(__name__, template_folder='../templates')
+# Точне визначення шляху до папки templates, щоб Vercel нічого не губив
+current_dir = os.path.dirname(os.path.abspath(__file__))
+template_dir = os.path.join(current_dir, '../templates')
+
+app = Flask(__name__, template_folder=template_dir)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "valeo-key-2026")
+
 
 # Швидке підключення до бази даних без блокування сайту
 def get_supabase():
