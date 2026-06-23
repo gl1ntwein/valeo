@@ -10,6 +10,25 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
+# --- ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Fork, GitHub, Footer) ---
+st.markdown("""
+    <style>
+        /* Сховуємо верхню панель з Fork та GitHub */
+        header {visibility: hidden;}
+        
+        /* Сховуємо нижній червоний футер / панель сервісу */
+        footer {visibility: hidden;}
+        [data-testid="stStatusWidget"] {visibility: hidden;}
+        
+        /* На мобільних прибираємо зайві відступи зверху */
+        .main .block-container {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
 # 2. БЛОК ЗАХИСТУ ПАРОЛЕМ
 def check_password():
     """Повертає True, якщо користувач ввів правильний пароль."""
