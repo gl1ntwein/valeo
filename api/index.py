@@ -1,10 +1,12 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, render_template_string, request, redirect, url_for, session, send_file
 from supabase import create_client, Client
 import pandas as pd
 import io
 
-# Flask автоматично шукатиме папку templates поруч із цим файлом всередині api/
+# Імпортуємо HTML-код із сусіднього файлу модуля
+from .html_template import COMBINED_HTML
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secret-2026")
 
@@ -35,8 +37,7 @@ def index():
             except Exception as e:
                 print(f"Помилка бази даних: {e}")
 
-    # Завантажуємо окремий HTML-файл
-    return render_template('index.html', authorized=session.get('authorized'), logs=db_data, error=error_msg)
+    return render_template_string(COMBINED_HTML, authorized=session.get('authorized'), logs=db_data, error=error_msg)
 
 @app.route('/add_report', methods=['POST'])
 def add_report():

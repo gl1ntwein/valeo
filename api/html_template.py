@@ -1,3 +1,6 @@
+# Файл: api/html_template.py
+
+COMBINED_HTML = """
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -22,7 +25,7 @@
     </nav>
 
     <div class="container mb-5">
-        <!-- ЕКРАН ВХОДУ (Якщо НЕ авторизований) -->
+        <!-- ЕКРАН ВХОДУ -->
         {% if not authorized %}
         <div class="row justify-content-center">
             <div class="col-md-4 card p-4 text-center mt-5">
@@ -38,7 +41,7 @@
         </div>
         {% endif %}
 
-        <!-- ГОЛОВНА ПАНЕЛЬ (Якщо авторизований) -->
+        <!-- ГОЛОВНА ПАНЕЛЬ -->
         {% if authorized %}
         <div class="row g-4">
             <!-- Форма внесення рапорту -->
@@ -117,3 +120,4 @@
     </div>
 </body>
 </html>
+"""
