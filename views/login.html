@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valeo Cab - Вхід</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <nav class="navbar navbar-dark mb-4"><div class="container-fluid"><span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span></div></nav>
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🏭 Кабінет Valeo</span>
+        </div>
+    </nav>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-4 card p-4 text-center mt-5">
@@ -23,15 +28,24 @@
     <script>
         function submitLogin() {
             const pass = document.getElementById('passwordField').value;
+            document.getElementById('errorArea').innerText = "⏳ Перевірка...";
+            
             fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // ПРАВИЛЬНЕ ПЕРЕТВОРЕННЯ ПАРОЛЮ В JSON ФОРМАТ
                 body: JSON.stringify({ password: pass })
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success) { location.reload(); }
-                else { document.getElementById('errorArea').innerText = data.error; }
+                if (data.success) { 
+                    location.reload(); 
+                } else { 
+                    document.getElementById('errorArea').innerText = data.error; 
+                }
+            })
+            .catch(err => {
+                document.getElementById('errorArea').innerText = "❌ Помилка зв'язку з сервером.";
             });
         }
     </script>
