@@ -1,0 +1,9 @@
+{
+  "name": "valeo-tracker-final",
+  "version": "1.0.0",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2",
+    "xlsx": "^0.18.5"
+  }
+}
