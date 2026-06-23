@@ -7,8 +7,6 @@
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="https://jsdelivr.net">
     <link rel="stylesheet" href="/style.css">
-    <!-- Підключаємо офіційний швидкий модуль Supabase з CDN -->
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
     <nav class="navbar navbar-dark mb-4">
@@ -31,7 +29,7 @@
             </div>
         </div>
 
-        <!-- ГОЛОВНА ПАНЕЛЬ (Завантажується статично, спочатку прихована) -->
+        <!-- ГОЛОВНА ПАНЕЛЬ (Спочатку повністю прихована) -->
         <div id="mainDashboard" class="row g-4 hidden">
             <!-- Внесення зміни -->
             <div class="col-md-4">
@@ -97,26 +95,43 @@
         </div>
     </div>
 
-    <!-- СКРИПТ КЕРУВАННЯ БАЗОЮ ПРЯМО З ТЕЛЕФОНУ -->
-    <script>
-        // ВСТАВ СЮДИ СВОЇ ДАНІ З SUPABASE
-        const SUPABASE_URL = "https://whjflfcqzeksfaaoormw.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_Ht1Rc32FbyEWwlAgR29u0A_HxxMRsbh";
-        
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <!-- Завантажуємо Supabase асинхронно і неблокуюче наприкінці сторінки -->
+    <script src="https://jsdelivr.net" defer></script>
 
-        // Перевірка авторизації при завантаженні сторінки
-        window.onload = function() {
+    <script>
+        const SUPABASE_URL = "https://supabase.co";
+        // ВСТАВ СЮДИ СВОЇ ДАНІ З SUPABASE (КЛЮЧ НА eyJ)
+        const SUPABASE_KEY = "ВСТАВ_СЮДИ_ТВІЙ_eyJ_КЛЮЧ";
+        
+        let _supabase = null;
+
+        // МИТТЄВИЙ ЗАПУСК ДИЗАЙНУ БЕЗ ОЧІКУВАННЯ СЕРВЕРІВ
+        document.addEventListener("DOMContentLoaded", function() {
             if (localStorage.getItem('valeo_auth') === 'true') {
-                showDashboard();
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                
+                // Спроба підвантажити логи, як тільки Supabase буде готовий
+                setTimeout(initSupabaseAndLoad, 100);
             }
-        };
+        });
+
+        function initSupabaseAndLoad() {
+            if (typeof supabase !== 'undefined' && !_supabase) {
+                _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                loadLogs();
+            } else if (!_supabase) {
+                // Якщо Supabase CDN ще долітає — пробуємо знову через 100мс без блокування екрану
+                setTimeout(initSupabaseAndLoad, 100);
+            }
+        }
 
         function login() {
             const pass = document.getElementById('passwordInput').value;
             if (pass === 'valeo2026') {
                 localStorage.setItem('valeo_auth', 'true');
-                showDashboard();
+                location.reload();
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
             }
@@ -127,14 +142,8 @@
             location.reload();
         }
 
-        function showDashboard() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.remove('hidden');
-            loadLogs();
-        }
-
         async function loadLogs() {
+            if (!_supabase) return;
             const { data, error } = await _supabase.from('work_logs').select('*').order('data', { ascending: false });
             const tbody = document.getElementById('tableBody');
             
@@ -155,6 +164,7 @@
         }
 
         async function addReport() {
+            if (!_supabase) { initSupabaseAndLoad(); }
             const data = document.getElementById('formData').value;
             const linia = document.getElementById('formLinia').value;
             const zmiana = parseInt(document.getElementById('formZmiana').value);
@@ -176,13 +186,13 @@
             loadLogs();
         }
 
-        async function downloadExcel() {
-            // Для статичного Excel підключаємо легку зовнішню бібліотеку в момент кліку
+        function downloadExcel() {
             const script = document.createElement('script');
             script.src = "https://jsdelivr.net";
             document.body.appendChild(script);
             
             script.onload = async function() {
+                if (!_supabase) return;
                 const { data } = await _supabase.from('work_logs').select('*').order('data', { ascending: false });
                 const worksheet = XLSX.utils.json_to_sheet(data || []);
                 const workbook = XLSX.utils.book_new();
