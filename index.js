@@ -7,27 +7,32 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 
-// З'єднання з Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-// Перевірка авторизації користувача
 const isAuth = (req) => req.headers.cookie && req.headers.cookie.includes('authorized=true');
-
-// Шлях до папки з дизайнами
 const viewsDir = path.join(__dirname, 'views');
 
-app.get('/', async (req, res) => {
+// УНІВЕРСАЛЬНА ФУНКЦІЯ ДЛЯ МИТТЄВОГО ОБРИВАННЯ КРУТІННЯ В БРАУЗЕРІ
+const sendQuickResponse = (res, htmlContent) => {
+    const buffer = Buffer.from(htmlContent, 'utf8');
+    
+    // Жорсткі заголовки, які змушують Chrome/Safari на телефоні зупинити завантаження
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Length', buffer.length); // Каже точну вагу сайту
+    res.setHeader('Connection', 'close'); // Наказує закрити з'єднання
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
-    // 1. Якщо користувач не увійшов — віддаємо класичний файл входу login.html
+    res.end(buffer); // Надсилає байти і жорстко закриває потік
+};
+
+app.get('/', async (req, res) => {
     if (!isAuth(req)) {
         const loginHtml = fs.readFileSync(path.join(viewsDir, 'login.html'), 'utf8');
-        return res.send(loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', ''));
+        return sendQuickResponse(res, loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', ''));
     }
 
-    // 2. Якщо користувач адмін — стягуємо логи з бази данных
     let logs = [];
     if (supabase) {
         try {
@@ -36,7 +41,6 @@ app.get('/', async (req, res) => {
         } catch (e) { console.log(e); }
     }
 
-    // Збираємо рядочки таблиці
     let rowsHtml = logs.map(row => `
         <tr>
             <td>${row.data}</td>
@@ -51,9 +55,8 @@ app.get('/', async (req, res) => {
         rowsHtml = '<tr><td colspan="5" class="text-center text-muted py-3">База даних порожня. Внеси першу зміну ліворуч!</td></tr>';
     }
 
-    // Зчитуємо файл кабінету dashboard.html та вставляємо в нього таблицю
     const dashboardHtml = fs.readFileSync(path.join(viewsDir, 'dashboard.html'), 'utf8');
-    res.send(dashboardHtml.replace('<!-- TABLE_ROWS_PLACEHOLDER -->', rowsHtml));
+    sendQuickResponse(res, dashboardHtml.replace('<!-- TABLE_ROWS_PLACEHOLDER -->', rowsHtml));
 });
 
 app.post('/login', (req, res) => {
@@ -62,7 +65,7 @@ app.post('/login', (req, res) => {
         res.redirect('/');
     } else {
         const loginHtml = fs.readFileSync(path.join(viewsDir, 'login.html'), 'utf8');
-        res.send(loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', '<p class="text-danger mt-2 fw-bold">❌ Неправильний пароль!</p>'));
+        sendQuickResponse(res, loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', '<p class="text-danger mt-2 fw-bold">❌ Неправильний пароль!</p>'));
     }
 });
 
@@ -99,9 +102,12 @@ app.get('/download_excel', async (req, res) => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Звіт_Valeo');
     
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    
     res.setHeader('Content-Disposition', 'attachment; filename=zvit_valeo.xlsx');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.send(buffer);
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Connection', 'close');
+    res.end(buffer);
 });
 
 app.get('/logout', (req, res) => {
