@@ -11,30 +11,56 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
 # --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
-# --- ПРИМУСОВЕ ВИДАЛЕННЯ ПЛАШКИ ТА АВАТАРКИ ЧЕРЕЗ КЛАСИ ІНСПЕКТОРА ---
-st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
-
 # НАДПОТУЖНИЙ ХАК: Сховуємо абсолютно весь нижній контейнер хостингу
+# --- ЗАЛІЗОБЕТОННЕ ВИДАЛЕННЯ НИЖНЬОЇ ПЛАШКИ ТА АВАТАРКИ ---
 st.markdown("""
     <style>
-        header[data-testid="stHeader"] { display: none !important; }
-        footer { visibility: hidden !important; height: 0px !important; }
+        /* 1. Повністю приховуємо верхню панель (Fork, GitHub) */
+        header[data-testid="stHeader"] {
+            display: none !important;
+            height: 0px !important;
+        }
         
-        /* Глушимо взагалі весь блок, де сидить аватарка та напис */
-        [class*="gzau3"], [class*="viewerBadge"] {
+        /* 2. Ховаємо стандартний нижній футер */
+        footer {
+            visibility: hidden !important;
+            display: none !important;
+            height: 0px !important;
+        }
+        
+        /* 3. Знищуємо знайдений тобою контейнер плашки та аватарку, 
+              перебиваючи будь-які внутрішні стилі хостингу */
+        a[class*="_container_gzau3_"],
+        div[class*="_profileContainer_"],
+        div[class*="_profilePreview_"],
+        div[class*="viewerBadge"],
+        .stAppDeployButton {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             height: 0px !important;
+            width: 0px !important;
+            max-height: 0px !important;
+            max-width: 0px !important;
+            margin: 0px !important;
+            padding: 0px !important;
         }
         
+        /* 4. Повертаємо кнопці мобільного меню (sidebar) працездатність */
         button[data-testid="baseButton-headerNoPadding"] {
             display: inline-flex !important;
             visibility: visible !important;
             z-index: 999999 !important;
         }
+        
+        /* 5. Компактні відступи для екрана телефону */
+        .main .block-container {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1rem !important;
+        }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 
