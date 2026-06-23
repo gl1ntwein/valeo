@@ -4,34 +4,27 @@ from supabase import create_client, Client
 import pandas as pd
 import io
 
-# Вказуємо Flask шукати шаблони в кореневій папці templates
-# Точне визначення шляху до папки templates, щоб Vercel нічого не губив
-current_dir = os.path.dirname(os.path.abspath(__file__))
-template_dir = os.path.join(current_dir, '../templates')
+# Flask автоматично шукатиме папку templates поруч із цим файлом всередині api/
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secret-2026")
 
-app = Flask(__name__, template_folder=template_dir)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "valeo-key-2026")
-
-
-# Швидке підключення до бази даних без блокування сайту
 def get_supabase():
     url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
     key = os.environ.get("SUPABASE_KEY", "").strip()
-    return create_client(url, key) if url and key else None
+    if url and key:
+        return create_client(url, key)
+    return None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     error_msg = None
-    
-    # 1. Обробка введення паролю
     if request.method == 'POST' and not session.get('authorized'):
-        if request.form.get('password') == 'valeo2026': # Твій пароль
+        if request.form.get('password') == 'valeo2026':
             session['authorized'] = True
             return redirect(url_for('index'))
         else:
             error_msg = "❌ Неправильний пароль!"
 
-    # 2. Отримання даних з бази, якщо користувач авторизований
     db_data = []
     if session.get('authorized'):
         db = get_supabase()
@@ -40,9 +33,9 @@ def index():
                 res = db.table("work_logs").select("*").order("data", desc=True).execute()
                 db_data = res.data if hasattr(res, 'data') else res
             except Exception as e:
-                print(f"Помилка завантаження логів: {e}")
+                print(f"Помилка бази даних: {e}")
 
-    # Передаємо все в один єдиний HTML-файл
+    # Завантажуємо окремий HTML-файл
     return render_template('index.html', authorized=session.get('authorized'), logs=db_data, error=error_msg)
 
 @app.route('/add_report', methods=['POST'])
@@ -57,7 +50,6 @@ def add_report():
     ok_lamps = int(request.form.get('komponenty_ok', 0))
     nok_lamps = int(request.form.get('komponenty_nok', 0))
     
-    # Розрахунок годин для Umowa Zlecenia
     nadgodziny = max(0, g_fakt - g_plan)
     godziny_nocne = min(8, g_fakt) if zmiana == 3 else 0
     
