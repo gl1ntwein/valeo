@@ -11,36 +11,38 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
 # --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
+# --- ПРАВИЛЬНЕ ПРИХОВУВАННЯ ЕЛЕМЕНТІВ (Sidebar залишається робочим!) ---
 st.markdown("""
     <style>
-        /* 1. Сховуємо верхню панель розробника (Fork, GitHub) */
-        header {visibility: hidden; height: 0px !important;}
-        
-        /* 2. Сховуємо нижній стандартний футер */
-        footer {visibility: hidden; height: 0px !important;}
-        
-        /* 3. Жорстко видаляємо червону плашку хостингу (Hosted with Streamlit) */
-        div[class^="stDeployButton"], 
-        div[data-testid="stStatusWidget"],
-        .stAppDeployButton,
-        #MainMenu {
+        /* 1. Повністю видаляємо тільки верхню панель розробника (Fork, GitHub) */
+        header[data-testid="stHeader"] {
             display: none !important;
-            visibility: hidden !important;
         }
         
-        /* 4. Очищення нижнього правого кутка від плаваючих кнопок сервісу */
-        [data-testid="stToolbar"],
+        /* 2. Сховуємо стандартний нижній футер */
+        footer {
+            visibility: hidden !important;
+            height: 0px !important;
+        }
+        
+        /* 3. Акуратно приховуємо червону кнопку 'Hosted with Streamlit' внизу праворуч, 
+              НЕ чіпаючи ліву кнопку меню (sidebar контролер) */
+        .stAppDeployButton,
+        div[class*="DeployButton"],
+        div[class^="stDeployButton"],
         div[class*="viewerBadge"] {
             display: none !important;
+            opacity: 0 !important;
         }
         
-        /* 5. На мобільних прибираємо відступи, щоб звільнити місце на екрані */
+        /* 4. Прибираємо відступи зверху, щоб додаток сидів компактно */
         .main .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 0rem !important;
+            padding-top: 1.5rem !important;
+            padding-bottom: 1rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # 2. БЛОК ЗАХИСТУ ПАРОЛЕМ
 def check_password():
