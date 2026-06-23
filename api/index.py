@@ -1,26 +1,27 @@
 import os
 from flask import Flask, render_template_string, request, redirect, url_for, session, send_file, make_response
 from supabase import create_client, Client
-import pandas as pd
 import io
 
 app = Flask(__name__)
-# Використовуємо стабільний ключ шифрування сесій
 app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secret-2026")
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = True
 
-def get_supabase():
-    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
-    key = os.environ.get("SUPABASE_KEY", "").strip()
-    if url and key:
-        return create_client(url, key)
-    return None
+# ГЛОБАЛЬНЕ ПІДКЛЮЧЕННЯ: Ініціалізується ОДИН РАЗ, перевикористовуючи сесії (Швидкість +++)
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
-# Імпортуємо твій HTML з сусіднього файлу
+supabase_client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Помилка глобального підключення до Supabase: {e}")
+
+# Імпортуємо твій HTML з сусіднього файлу html_template.py
 from .html_template import COMBINED_HTML
 
-# Головна функція з примусовим закриттям з'єднання, щоб прибрати зависання
 @app.route('/', methods=['GET', 'POST'])
 def index():
     error_msg = None
@@ -34,16 +35,14 @@ def index():
             error_msg = "❌ Неправильний пароль!"
 
     db_data = []
-    if session.get('authorized'):
-        db = get_supabase()
-        if db:
-            try:
-                data_res = db.table("work_logs").select("*").order("data", desc=True).execute()
-                db_data = data_res.data if hasattr(data_res, 'data') else data_res
-            except Exception as e:
-                print(f"Помилка бази даних: {e}")
+    if session.get('authorized') and supabase_client:
+        try:
+            # Використовуємо вже готове з'єднання без повторних авторизацій
+            data_res = supabase_client.table("work_logs").select("*").order("data", desc=True).execute()
+            db_data = data_res.data if hasattr(data_res, 'data') else data_res
+        except Exception as e:
+            print(f"Помилка отримання даних: {e}")
 
-    # Створюємо відповідь і примусово кажемо браузеру припинити завантаження
     rendered = render_template_string(COMBINED_HTML, authorized=session.get('authorized'), logs=db_data, error=error_msg)
     response = make_response(rendered)
     response.headers["Connection"] = "close"
@@ -71,12 +70,11 @@ def add_report():
         "komponenty_ok": ok_lamps, "komponenty_nok": nok_lamps
     }
     
-    db = get_supabase()
-    if db:
+    if supabase_client:
         try:
-            db.table("work_logs").upsert(data_to_insert).execute()
+            supabase_client.table("work_logs").upsert(data_to_insert).execute()
         except Exception as e:
-            print(e)
+            print(f"Помилка запису зміни: {e}")
             
     res = make_response(redirect(url_for('index')))
     res.headers["Connection"] = "close"
@@ -85,10 +83,12 @@ def add_report():
 @app.route('/download_excel')
 def download_excel():
     if not session.get('authorized'): return redirect(url_for('index'))
-    db = get_supabase()
-    if not db: return "Помилка бази даних"
+    if not supabase_client: return "Помилка бази даних"
     
-    res = db.table("work_logs").select("*").order("data", desc=True).execute()
+    # ЛОКАЛЬНИЙ ІМПОРТ: pandas вантажиться ТІЛЬКИ в момент кліку на кнопку завантаження звіту!
+    import pandas as pd
+    
+    res = supabase_client.table("work_logs").select("*").order("data", desc=True).execute()
     db_data = res.data if hasattr(res, 'data') else res
     df = pd.DataFrame(db_data)
     
