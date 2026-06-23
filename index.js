@@ -14,23 +14,22 @@ const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supaba
 const isAuth = (req) => req.headers.cookie && req.headers.cookie.includes('authorized=true');
 const viewsDir = path.join(__dirname, 'views');
 
-// УНІВЕРСАЛЬНА ФУНКЦІЯ ДЛЯ МИТТЄВОГО ОБРИВАННЯ КРУТІННЯ В БРАУЗЕРІ
+// ХАК ШВИДКОСТІ: Зчитуємо файли в пам'ять ОДИН РАЗ при старті сервера, а не при кожному кліку
+const loginHtmlTemplate = fs.readFileSync(path.join(viewsDir, 'login.html'), 'utf8');
+const dashboardHtmlTemplate = fs.readFileSync(path.join(viewsDir, 'dashboard.html'), 'utf8');
+
 const sendQuickResponse = (res, htmlContent) => {
     const buffer = Buffer.from(htmlContent, 'utf8');
-    
-    // Жорсткі заголовки, які змушують Chrome/Safari на телефоні зупинити завантаження
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Content-Length', buffer.length); // Каже точну вагу сайту
-    res.setHeader('Connection', 'close'); // Наказує закрити з'єднання
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Connection', 'close');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    
-    res.end(buffer); // Надсилає байти і жорстко закриває потік
+    res.end(buffer);
 };
 
 app.get('/', async (req, res) => {
     if (!isAuth(req)) {
-        const loginHtml = fs.readFileSync(path.join(viewsDir, 'login.html'), 'utf8');
-        return sendQuickResponse(res, loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', ''));
+        return sendQuickResponse(res, loginHtmlTemplate.replace('<!-- ERROR_PLACEHOLDER -->', ''));
     }
 
     let logs = [];
@@ -55,8 +54,7 @@ app.get('/', async (req, res) => {
         rowsHtml = '<tr><td colspan="5" class="text-center text-muted py-3">База даних порожня. Внеси першу зміну ліворуч!</td></tr>';
     }
 
-    const dashboardHtml = fs.readFileSync(path.join(viewsDir, 'dashboard.html'), 'utf8');
-    sendQuickResponse(res, dashboardHtml.replace('<!-- TABLE_ROWS_PLACEHOLDER -->', rowsHtml));
+    sendQuickResponse(res, dashboardHtmlTemplate.replace('<!-- TABLE_ROWS_PLACEHOLDER -->', rowsHtml));
 });
 
 app.post('/login', (req, res) => {
@@ -64,18 +62,15 @@ app.post('/login', (req, res) => {
         res.setHeader('Set-Cookie', 'authorized=true; Path=/; HttpOnly; Secure');
         res.redirect('/');
     } else {
-        const loginHtml = fs.readFileSync(path.join(viewsDir, 'login.html'), 'utf8');
-        sendQuickResponse(res, loginHtml.replace('<!-- ERROR_PLACEHOLDER -->', '<p class="text-danger mt-2 fw-bold">❌ Неправильний пароль!</p>'));
+        res.send(loginHtmlTemplate.replace('<!-- ERROR_PLACEHOLDER -->', '<p class="text-danger mt-2 fw-bold">❌ Неправильний пароль!</p>'));
     }
 });
 
 app.post('/add_report', async (req, res) => {
     if (!isAuth(req) || !supabase) return res.redirect('/');
-    
     const { data, linia, zmiana, godziny_plan, godziny_fakt, komponenty_ok, komponenty_nok } = req.body;
     const g_plan = parseInt(godziny_plan) || 8;
     const g_fakt = parseInt(godziny_fakt) || 8;
-    
     const nadgodziny = Math.max(0, g_fakt - g_plan);
     const godziny_nocne = parseInt(zmiana) === 3 ? Math.min(8, g_fakt) : 0;
     
@@ -88,25 +83,18 @@ app.post('/add_report', async (req, res) => {
             komponenty_nok: parseInt(komponenty_nok) || 0
         });
     } catch (e) { console.log(e); }
-    
     res.redirect('/');
 });
 
 app.get('/download_excel', async (req, res) => {
     if (!isAuth(req) || !supabase) return res.redirect('/');
-    
     const { data } = await supabase.from('work_logs').select('*').order('data', { ascending: false });
-    
     const worksheet = XLSX.utils.json_to_sheet(data || []);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Звіт_Valeo');
-    
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    
     res.setHeader('Content-Disposition', 'attachment; filename=zvit_valeo.xlsx');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Length', buffer.length);
-    res.setHeader('Connection', 'close');
     res.end(buffer);
 });
 
