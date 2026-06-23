@@ -54,49 +54,58 @@ choice = st.sidebar.selectbox("Меню додатку", menu)
 if choice == "🔎 Пошук та Звірка":
     st.subheader("📊 Пошук за базою даних та генерація звітів")
     
-    # Завантажуємо всі дані з Supabase
-    response = supabase.table("work_logs").select("*").order("data", desc=True).execute()
-    db_data = response.data
-    
-    if db_data:
-        df = pd.DataFrame(db_data)
-        # Перетворюємо дату для зручності
-        df['data'] = pd.to_datetime(df['data'])
-        df['День тижня'] = df['data'].dt.day_name().map({
-            'Monday':'Понеділок', 'Tuesday':'Вівторок', 'Wednesday':'Середа', 
-            'Thursday':'Четвер', 'Friday':'П' + "'" + 'ятниця', 'Saturday':'Субота', 'Sunday':'Неділя'
-        })
+    try:
+        # Безпечний запит до Supabase
+        query = supabase.table("work_logs").select("*").order("data", desc=True)
+        response = query.execute()
         
-        # Блок фільтрів
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            line_filter = st.selectbox("Фільтр за лінією:", ["Всі"] + list(df['linia'].unique()))
-        with col2:
-            shift_filter = st.selectbox("Фільтр за зміною:", ["Всі", 1, 2, 3])
-        with col3:
-            weekend_only = st.checkbox("Тільки вихідні (Субота/Неділя)")
-            
-        # Застосування фільтрів
-        if line_filter != "Всі":
-            df = df[df['linia'] == line_filter]
-        if shift_filter != "Всі":
-            df = df[df['zmiana'] == int(shift_filter)]
-        if weekend_only:
-            df = df[df['День тижня'].isin(['Субота', 'Неділя'])]
-            
-        # Виведення таблиці на екран
-        st.dataframe(df, use_container_width=True)
+        # Отримуємо чисті дані з відповіді
+        db_data = response.data if hasattr(response, 'data') else response
         
-        # Кнопка Експорту в Excel
-        excel_file = to_excel(df)
-        st.download_button(
-            label="📥 Скачати цей звіт в Excel для Exact",
-            data=excel_file,
-            file_name="zvit_valeo_exact.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    else:
-        st.info("База даних поки порожня. Синхронізуйте графік або внесіть рапорт.")
+        if db_data and len(db_data) > 0:
+            df = pd.DataFrame(db_data)
+            # Перетворюємо дату для зручності
+            df['data'] = pd.to_datetime(df['data'])
+            df['День тижня'] = df['data'].dt.day_name().map({
+                'Monday':'Понеділок', 'Tuesday':'Вівторок', 'Wednesday':'Середа', 
+                'Thursday':'Четвер', 'Friday':'П' + "'" + 'ятниця', 'Saturday':'Субота', 'Sunday':'Неділя'
+            })
+            
+            # Блок фільтрів
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                line_filter = st.selectbox("Фільтр за лінією:", ["Всі"] + list(df['linia'].unique()))
+            with col2:
+                shift_filter = st.selectbox("Фільтр за зміною:", ["Всі", 1, 2, 3])
+            with col3:
+                weekend_only = st.checkbox("Тільки вихідні (Субота/Неділя)")
+                
+            # Застосування фільтрів
+            if line_filter != "Всі":
+                df = df[df['linia'] == line_filter]
+            if shift_filter != "Всі":
+                df = df[df['zmiana'] == int(shift_filter)]
+            if weekend_only:
+                df = df[df['День тижня'].isin(['Субота', 'Неділя'])]
+                
+            # Виведення таблиці на екран
+            st.dataframe(df, use_container_width=True)
+            
+            # Кнопка Експорту в Excel
+            excel_file = to_excel(df)
+            st.download_button(
+                label="📥 Скачати цей звіт в Excel для Exact",
+                data=excel_file,
+                file_name="zvit_valeo_exact.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.info("ℹ️ База даних поки порожня. Перейдіть у меню 'Внесення рапорту', щоб додати першу зміну, або запустіть Синхронізацію.")
+            
+    except Exception as e:
+        st.error(f"Помилка підключення до API: {e}")
+        st.info("💡 Перевірте, що в Secrets правильно вказано SUPABASE_URL (без /rest/v1/ на кінці) та SUPABASE_KEY.")
+
 
 # --- МЕНЮ 2: ВНЕСЕННЯ ПАПЕРОВОГО РАПОРТУ З ТЕЛЕФОНУ ---
 elif choice == "📝 Внесення рапорту за зміну":
