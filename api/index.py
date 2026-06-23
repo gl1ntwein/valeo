@@ -1,14 +1,14 @@
 import os
-from flask import Flask, render_template_string, request, redirect, url_for, session, send_file
+from flask import Flask, render_template_string, request, redirect, url_for, session, send_file, make_response
 from supabase import create_client, Client
 import pandas as pd
 import io
 
-# Імпортуємо HTML-код із сусіднього файлу модуля
-from .html_template import COMBINED_HTML
-
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secret-2026")
+# Використовуємо стабільний ключ шифрування сесій
+app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "valeo-exact-secret-2026")
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = True
 
 def get_supabase():
     url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
@@ -17,13 +17,19 @@ def get_supabase():
         return create_client(url, key)
     return None
 
+# Імпортуємо твій HTML з сусіднього файлу
+from .html_template import COMBINED_HTML
+
+# Головна функція з примусовим закриттям з'єднання, щоб прибрати зависання
 @app.route('/', methods=['GET', 'POST'])
 def index():
     error_msg = None
     if request.method == 'POST' and not session.get('authorized'):
         if request.form.get('password') == 'valeo2026':
             session['authorized'] = True
-            return redirect(url_for('index'))
+            res = make_response(redirect(url_for('index')))
+            res.headers["Connection"] = "close"
+            return res
         else:
             error_msg = "❌ Неправильний пароль!"
 
@@ -32,12 +38,16 @@ def index():
         db = get_supabase()
         if db:
             try:
-                res = db.table("work_logs").select("*").order("data", desc=True).execute()
-                db_data = res.data if hasattr(res, 'data') else res
+                data_res = db.table("work_logs").select("*").order("data", desc=True).execute()
+                db_data = data_res.data if hasattr(data_res, 'data') else data_res
             except Exception as e:
                 print(f"Помилка бази даних: {e}")
 
-    return render_template_string(COMBINED_HTML, authorized=session.get('authorized'), logs=db_data, error=error_msg)
+    # Створюємо відповідь і примусово кажемо браузеру припинити завантаження
+    rendered = render_template_string(COMBINED_HTML, authorized=session.get('authorized'), logs=db_data, error=error_msg)
+    response = make_response(rendered)
+    response.headers["Connection"] = "close"
+    return response
 
 @app.route('/add_report', methods=['POST'])
 def add_report():
@@ -68,7 +78,9 @@ def add_report():
         except Exception as e:
             print(e)
             
-    return redirect(url_for('index'))
+    res = make_response(redirect(url_for('index')))
+    res.headers["Connection"] = "close"
+    return res
 
 @app.route('/download_excel')
 def download_excel():
@@ -85,9 +97,13 @@ def download_excel():
         df.to_excel(writer, index=False, sheet_name='Звіт_Valeo')
     output.seek(0)
     
-    return send_file(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="zvit_valeo.xlsx")
+    response = make_response(send_file(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="zvit_valeo.xlsx"))
+    response.headers["Connection"] = "close"
+    return response
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    res = make_response(redirect(url_for('index')))
+    res.headers["Connection"] = "close"
+    return res
