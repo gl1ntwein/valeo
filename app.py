@@ -10,24 +10,37 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
-# --- ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Fork, GitHub, Footer) ---
+# --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
 st.markdown("""
     <style>
-        /* Сховуємо верхню панель з Fork та GitHub */
-        header {visibility: hidden;}
+        /* 1. Сховуємо верхню панель розробника (Fork, GitHub) */
+        header {visibility: hidden; height: 0px !important;}
         
-        /* Сховуємо нижній червоний футер / панель сервісу */
-        footer {visibility: hidden;}
-        [data-testid="stStatusWidget"] {visibility: hidden;}
+        /* 2. Сховуємо нижній стандартний футер */
+        footer {visibility: hidden; height: 0px !important;}
         
-        /* На мобільних прибираємо зайві відступи зверху */
+        /* 3. Жорстко видаляємо червону плашку хостингу (Hosted with Streamlit) */
+        div[class^="stDeployButton"], 
+        div[data-testid="stStatusWidget"],
+        .stAppDeployButton,
+        #MainMenu {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 4. Очищення нижнього правого кутка від плаваючих кнопок сервісу */
+        [data-testid="stToolbar"],
+        div[class*="viewerBadge"] {
+            display: none !important;
+        }
+        
+        /* 5. На мобільних прибираємо відступи, щоб звільнити місце на екрані */
         .main .block-container {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding-top: 1rem !important;
+            padding-bottom: 0rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
-
 
 # 2. БЛОК ЗАХИСТУ ПАРОЛЕМ
 def check_password():
