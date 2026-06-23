@@ -14,6 +14,7 @@ const fallbackSupabaseKey = 'sb_publishable_Ht1Rc32FbyEWwlAgR29u0A_HxxMRsbh';
 const supabaseUrl = process.env.SUPABASE_URL || fallbackSupabaseUrl;
 const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || fallbackSupabaseKey;
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+let databaseSupportsConflictUpsert = true;
 
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
@@ -48,6 +49,42 @@ function requireAuth(req, res) {
     return false;
   }
   return true;
+}
+
+function isMissingConflictConstraint(error) {
+  return error && (error.code === '42P10' || String(error.message || '').includes('no unique or exclusion constraint'));
+}
+
+async function saveWorkLogWithoutConstraint(record) {
+  const { data: updatedRows, error: updateError } = await supabase
+    .from('work_logs')
+    .update(record)
+    .eq('data', record.data)
+    .eq('linia', record.linia)
+    .eq('zmiana', record.zmiana)
+    .select('data');
+
+  if (updateError) throw updateError;
+  if (updatedRows && updatedRows.length > 0) return;
+
+  const { error: insertError } = await supabase.from('work_logs').insert(record);
+  if (insertError) throw insertError;
+}
+
+async function saveWorkLogs(records) {
+  const list = Array.isArray(records) ? records : [records];
+  if (list.length === 0) return;
+
+  if (databaseSupportsConflictUpsert) {
+    const { error } = await supabase.from('work_logs').upsert(list, { onConflict: 'data,linia,zmiana' });
+    if (!error) return;
+    if (!isMissingConflictConstraint(error)) throw error;
+    databaseSupportsConflictUpsert = false;
+  }
+
+  for (const record of list) {
+    await saveWorkLogWithoutConstraint(record);
+  }
 }
 
 function normalizeDate(value) {
@@ -172,8 +209,7 @@ app.post('/api/add_report', async (req, res) => {
   }
 
   try {
-    const { error } = await supabase.from('work_logs').upsert(report, { onConflict: 'data,linia,zmiana' });
-    if (error) throw error;
+    await saveWorkLogs(report);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -226,8 +262,7 @@ app.post('/api/sync_schedule', async (req, res) => {
     }
 
     if (detectedShifts.length > 0) {
-      const { error } = await supabase.from('work_logs').upsert(detectedShifts, { onConflict: 'data,linia,zmiana' });
-      if (error) throw error;
+      await saveWorkLogs(detectedShifts);
     }
 
     res.json({ success: true, count: detectedShifts.length });
