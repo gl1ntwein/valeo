@@ -19,35 +19,8 @@ st.markdown("""
             display: none !important;
         }
         
-        /* 2. Сховуємо стандартний футер */
-        footer {
-            visibility: hidden !important;
-            height: 0px !important;
-        }
-        
-        /* 3. Жорстко видаляємо весь батьківський контейнер плашки з твого скріншоту */
-        div[class*="_viewerBadge_"],
-        div[class*="_profileContainer_"],
-        div[class*="_profilePreview_"],
-        a[class*="_container_gzau3_"] {
-            display: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
-            height: 0px !important;
-            width: 0px !important;
-        }
-        
-        /* 4. На випадок нових оновлень — глушимо стандартну кнопку деплою */
-        .stAppDeployButton {
-            display: none !important;
-        }
-        
-        /* 5. Повертаємо кнопці мобільного меню (sidebar) максимальний пріоритет, 
-              щоб вона ЗАВЖДИ відображалася на телефоні */
-        button[data-testid="baseButton-headerNoPadding"] {
-            display: inline-flex !important;
-            visibility: visible !important;
-            z-index: 999999 !important;
+        ._container_gzau3_1 {
+            display: none !important;    
         }
         
         /* 6. Робимо красиві та компактні відступи на мобілці */
