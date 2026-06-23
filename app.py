@@ -11,37 +11,53 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="Valeo & Exact Tracker", layout="wide")
 
 # --- ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ STREAMLIT (Разом із нижньою червоною плашкою) ---
-# --- ПРАВИЛЬНЕ ПРИХОВУВАННЯ ЕЛЕМЕНТІВ (Sidebar залишається робочим!) ---
+# --- КІЛЛЕР-ФІЧА ДЛЯ ВИДАЛЕННЯ НИЖНЬОЇ ПЛАШКИ (За скріншотом коду) ---
 st.markdown("""
     <style>
-        /* 1. Повністю видаляємо тільки верхню панель розробника (Fork, GitHub) */
+        /* 1. Видаляємо верхню чорну панель (Fork, GitHub) */
         header[data-testid="stHeader"] {
             display: none !important;
         }
         
-        /* 2. Сховуємо стандартний нижній футер */
+        /* 2. Сховуємо стандартний футер */
         footer {
             visibility: hidden !important;
             height: 0px !important;
         }
         
-        /* 3. Акуратно приховуємо червону кнопку 'Hosted with Streamlit' внизу праворуч, 
-              НЕ чіпаючи ліву кнопку меню (sidebar контролер) */
-        .stAppDeployButton,
-        div[class*="DeployButton"],
-        div[class^="stDeployButton"],
-        div[class*="viewerBadge"] {
+        /* 3. Жорстко видаляємо весь батьківський контейнер плашки з твого скріншоту */
+        div[class*="_viewerBadge_"],
+        div[class*="_profileContainer_"],
+        div[class*="_profilePreview_"],
+        a[class*="_container_gzau3_"] {
             display: none !important;
             opacity: 0 !important;
+            visibility: hidden !important;
+            height: 0px !important;
+            width: 0px !important;
         }
         
-        /* 4. Прибираємо відступи зверху, щоб додаток сидів компактно */
+        /* 4. На випадок нових оновлень — глушимо стандартну кнопку деплою */
+        .stAppDeployButton {
+            display: none !important;
+        }
+        
+        /* 5. Повертаємо кнопці мобільного меню (sidebar) максимальний пріоритет, 
+              щоб вона ЗАВЖДИ відображалася на телефоні */
+        button[data-testid="baseButton-headerNoPadding"] {
+            display: inline-flex !important;
+            visibility: visible !important;
+            z-index: 999999 !important;
+        }
+        
+        /* 6. Робимо красиві та компактні відступи на мобілці */
         .main .block-container {
             padding-top: 1.5rem !important;
             padding-bottom: 1rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 # 2. БЛОК ЗАХИСТУ ПАРОЛЕМ
